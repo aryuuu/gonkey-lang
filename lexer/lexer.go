@@ -1,8 +1,6 @@
 package lexer
 
 import (
-	"log"
-
 	"github.com/aryuuu/gonkey-lang/token"
 )
 
@@ -87,14 +85,15 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Literal = l.readIdentifier()
 			tok.Type = token.LookupIdent(tok.Literal)
 			return tok
-		} else if isDigit(l.ch) {
+		}
+
+		if isDigit(l.ch) {
 			tok.Type = token.INT
 			tok.Literal = l.readNumber()
 			return tok
-		} else {
-			log.Printf("l.ch: %v", l.ch)
-			tok = newToken(token.ILLEGAL, l.ch)
 		}
+
+		tok = newToken(token.ILLEGAL, l.ch)
 	}
 
 	l.readChar()
@@ -129,9 +128,9 @@ func (l *Lexer) skipWhitespace() {
 func (l *Lexer) peekChar() byte {
 	if l.readPosition >= len(l.input) {
 		return 0
-	} else {
-		return l.input[l.readPosition]
 	}
+
+	return l.input[l.readPosition]
 }
 
 func isLetter(ch byte) bool {
