@@ -70,6 +70,24 @@ func (ls *LetStatement) String() string {
 	return out.String()
 }
 
+type BlockStatement struct {
+	Token      token.Token // the { token
+	Statements []Statement
+}
+func (bs *BlockStatement) statementNode() {}
+func (bs *BlockStatement) TokenLiteral() string {
+	return bs.Token.Literal
+}
+func (bs *BlockStatement) String() string {
+	var result bytes.Buffer
+
+	for _, st := range bs.Statements {
+		result.WriteString(st.String())
+	}
+
+	return result.String()
+}
+
 type Identifier struct {
 	Token token.Token
 	Value string
@@ -184,10 +202,38 @@ func (ie *InfixExpression) String() string {
 	return out.String()
 }
 
+type IfExpression struct {
+	Token       token.Token
+	Condition   Expression
+	Consequence *BlockStatement
+	Alternative *BlockStatement
+}
+
+func (ie *IfExpression) expressionNode() {}
+func (ie *IfExpression) TokenLiteral() string {
+	return ie.Token.Literal
+}
+func (ie *IfExpression) String() string {
+	var result bytes.Buffer
+
+	result.WriteString("if")
+	result.WriteString(ie.Condition.String())
+	result.WriteString(" ")
+	result.WriteString(ie.Consequence.String())
+
+	if ie.Alternative != nil {
+		result.WriteString("else ")
+		result.WriteString(ie.Alternative.String())
+	}
+
+	return result.String()
+}
+
 type Boolean struct {
 	Token token.Token
 	Value bool
 }
+
 func (b *Boolean) expressionNode() {}
 func (b *Boolean) TokenLiteral() string {
 	return b.Token.Literal
