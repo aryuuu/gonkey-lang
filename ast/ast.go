@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"strings"
 
 	"github.com/aryuuu/gonkey-lang/token"
 )
@@ -74,6 +75,7 @@ type BlockStatement struct {
 	Token      token.Token // the { token
 	Statements []Statement
 }
+
 func (bs *BlockStatement) statementNode() {}
 func (bs *BlockStatement) TokenLiteral() string {
 	return bs.Token.Literal
@@ -156,6 +158,33 @@ func (il *IntegerLiteral) TokenLiteral() string {
 }
 func (il *IntegerLiteral) String() string {
 	return il.Token.Literal
+}
+
+type FunctionLiteral struct {
+	Token      token.Token
+	Parameters []*Identifier
+	Body       *BlockStatement
+}
+
+func (fl *FunctionLiteral) expressionNode() {}
+func (fl *FunctionLiteral) TokenLiteral() string {
+	return fl.Token.Literal
+}
+func (fl *FunctionLiteral) String() string {
+	var result bytes.Buffer
+
+	params := []string{}
+	for _, par := range fl.Parameters {
+		params = append(params, par.String())
+	}
+
+	result.WriteString(fl.TokenLiteral())
+	result.WriteString("(")
+	result.WriteString(strings.Join(params, ", "))
+	result.WriteString(")")
+	result.WriteString(fl.Body.String())
+
+	return result.String()
 }
 
 type PrefixExpression struct {
