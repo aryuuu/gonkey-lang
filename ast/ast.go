@@ -258,6 +258,31 @@ func (ie *IfExpression) String() string {
 	return result.String()
 }
 
+type CallExpression struct {
+	Token     token.Token
+	Function  Expression
+	Arguments []Expression
+}
+func (ce *CallExpression) expressionNode() {}
+func (ce *CallExpression) TokenLiteral() string {
+	return ce.Token.Literal
+}
+func (ce *CallExpression) String() string {
+	var result bytes.Buffer
+
+	args := []string{}
+	for _,a := range ce.Arguments {
+		args = append(args, a.String())
+	}
+
+	result.WriteString(ce.Function.String())
+	result.WriteString("(")
+	result.WriteString(strings.Join(args, ", "))
+	result.WriteString(")")
+
+	return result.String()
+}
+
 type Boolean struct {
 	Token token.Token
 	Value bool

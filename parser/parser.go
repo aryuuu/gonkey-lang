@@ -29,6 +29,7 @@ var precedence = map[token.TokenType]int{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.LPAREN:   CALL,
 }
 
 type Parser struct {
@@ -71,6 +72,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfixParseFn(token.GT, p.parseInfixExpression)
 	p.registerInfixParseFn(token.EQ, p.parseInfixExpression)
 	p.registerInfixParseFn(token.NOT_EQ, p.parseInfixExpression)
+	p.registerInfixParseFn(token.LPAREN, p.parseCallExpression)
 
 	// call next token twice to the curToken and peekToken are set
 	p.nextToken()
@@ -275,7 +277,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {
 	fl := &ast.FunctionLiteral{
-		Token:      p.curToken,
+		Token: p.curToken,
 	}
 
 	if !p.expectPeek(token.LPAREN) {
@@ -291,6 +293,40 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	fl.Body = p.parseBlockStatement()
 
 	return fl
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	ce := &ast.CallExpression{
+		Token:    p.curToken,
+		Function: function,
+	}
+	ce.Arguments = p.parseCallArguments()
+
+	return ce
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		return args
+	}
+
+	p.nextToken()
+	args = append(args, p.parseExpression(LOWEST))
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return args
 }
 
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
@@ -330,7 +366,7 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	block := &ast.BlockStatement{
-		Token: p.curToken,
+		Token:      p.curToken,
 		Statements: []ast.Statement{},
 	}
 
