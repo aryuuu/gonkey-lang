@@ -81,6 +81,52 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 }
 
+func TestIfElseExpression(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected any
+	}{
+		{
+			input:    "if(true) { 10 }",
+			expected: 10,
+		},
+		{
+			input:    "if(false) { 10 }",
+			expected: nil,
+		},
+		{
+			input:    "if(1) { 10 }",
+			expected: 10,
+		},
+		{
+			input:    "if(1 < 2) { 10 }",
+			expected: 10,
+		},
+		{
+			input:    "if(1 > 2) { 10 }",
+			expected: nil,
+		},
+		{
+			input:    "if(1 > 2) { 10 } else { 20 }",
+			expected: 20,
+		},
+		{
+			input:    "if(1 < 2) { 10 } else { 20 }",
+			expected: 10,
+		},
+	}
+
+	for _, tc := range testCases {
+		evaluated := testEval(tc.input)
+		integer, ok := tc.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+		}
+	}
+}
+
 func TestEvalBooleanExpression(t *testing.T) {
 	testCases := []struct {
 		input    string
@@ -224,6 +270,16 @@ func testIntegerObject(t *testing.T, obj object.Object, val int64) bool {
 
 	if result.Value != val {
 		t.Errorf("obj value should be %d, got=%d\n", val, result.Value)
+		return false
+	}
+
+	return true
+}
+
+func testNullObject(t *testing.T, obj object.Object) bool {
+	_, ok := obj.(*object.Null)
+	if !ok {
+		t.Errorf("obj should be of type object.Null, got=%T (%+v)\n", obj, obj)
 		return false
 	}
 
