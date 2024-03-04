@@ -7,6 +7,7 @@ import (
 
 	"github.com/aryuuu/gonkey-lang/evaluator"
 	"github.com/aryuuu/gonkey-lang/lexer"
+	"github.com/aryuuu/gonkey-lang/object"
 	"github.com/aryuuu/gonkey-lang/parser"
 )
 
@@ -15,6 +16,7 @@ const PROMPT = ">> "
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 
+	env := object.NewEnvironment()
 	for {
 		fmt.Fprintf(out, "%s", PROMPT)
 		scanned := scanner.Scan()
@@ -33,7 +35,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, env)
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")

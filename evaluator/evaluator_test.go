@@ -81,6 +81,35 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 }
 
+func TestLetStatements(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected int64
+	}{
+		{
+			input: "let a = 5; a;",
+			expected: 5,
+		},
+		{
+			input: "let a = 5 * 5; a;",
+			expected: 25,
+		},
+		{
+			input: "let a = 5; let b = a; b;",
+			expected: 5,
+		},
+		{
+			input: "let a = 5; let b = a; let c = a + b + 5; c;",
+			expected: 15,
+		},
+	}
+
+	for _, tc := range testCases {
+		evaluated := testEval(tc.input)
+		testIntegerObject(t, evaluated, tc.expected)
+	}
+}
+
 func TestIfElseExpression(t *testing.T) {
 	testCases := []struct {
 		input    string
@@ -354,7 +383,8 @@ func testEval(input string) object.Object {
 	p := parser.New(l)
 	program := p.ParseProgram()
 
-	return Eval(program)
+	env := object.NewEnvironment()
+	return Eval(program, env)
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, val int64) bool {
