@@ -259,19 +259,19 @@ func TestReturnValue(t *testing.T) {
 		expected int64
 	}{
 		{
-			input: "return 10;",
+			input:    "return 10;",
 			expected: 10,
 		},
 		{
-			input: "return 10; 9;",
+			input:    "return 10; 9;",
 			expected: 10,
 		},
 		{
-			input: "return 2 * 5;",
+			input:    "return 2 * 5;",
 			expected: 10,
 		},
 		{
-			input: "9; return 2 * 5; 9;",
+			input:    "9; return 2 * 5; 9;",
 			expected: 10,
 		},
 		{
@@ -289,6 +289,63 @@ func TestReturnValue(t *testing.T) {
 	for _, tc := range testCases {
 		evaluated := testEval(tc.input)
 		testIntegerObject(t, evaluated, tc.expected)
+	}
+}
+
+func TestErrorHandling(t *testing.T) {
+	testCases := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{
+			input:           "5 + true",
+			expectedMessage: "type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			input:           "5 + true; 5;",
+			expectedMessage: "type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			input:           "-true",
+			expectedMessage: "unknown operator: -BOOLEAN",
+		},
+		{
+			input:           "true + false",
+			expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			input:           "5; true + false; 5",
+			expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			input:           "if (10 > 1) { true + false; }",
+			expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			input: `
+			if (10 > 1) {
+				if (10 > 1) {
+					return true + false;
+				}
+			}
+
+			return 1;
+			`,
+			expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+		},
+	}
+
+	for _, tc := range testCases {
+		evaluated := testEval(tc.input)
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("no error object returned, got=%T(%+v)", evaluated, evaluated)
+			continue
+		}
+
+		if errObj.Message != tc.expectedMessage {
+			t.Errorf("wrong error message. expected=%q, got=%q", tc.expectedMessage, errObj.Message)
+		}
 	}
 }
 
