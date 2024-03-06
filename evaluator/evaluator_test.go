@@ -110,6 +110,62 @@ func TestLetStatements(t *testing.T) {
 	}
 }
 
+func TestFunctionObject(t *testing.T) {
+	input := `fn(x) { x + 2; };`
+
+	evaluated := testEval(input)
+	fn, ok := evaluated.(*object.Function)
+	if !ok {
+		t.Fatalf("object is not Function, got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if len(fn.Parameters) != 1 {
+		t.Fatalf("function has wrong params, Params=%+v", fn.Parameters)
+	}
+
+	if fn.Parameters[0].String() != "x" {
+		t.Fatalf("parameter is not 'x', got=%q", fn.Parameters[0])
+	}
+
+	expectedBody := `(x + 2)`
+	if fn.Body.String() != expectedBody {
+		t.Fatalf("body is not %q, got=%T", expectedBody, fn.Body.String())
+	}
+}
+
+func TestFunctionApplication(t *testing.T) {
+	testCases := []struct{
+		input string
+		expected int64
+	}{
+		{
+			input: "let identity = fn(x) { x; }; identity(5);",
+			expected: 5,
+		},
+		{
+			input: "let identity = fn(x) { return x; }; identity(5);",
+			expected: 5,
+		},
+		{
+			input: "let double = fn(x) { 2 * x; }; double(5);",
+			expected: 10,
+		},
+		{
+			input: "let add = fn(x, y) { y + x; }; add(5, 5);",
+			expected: 10,
+		},
+		{
+			input: "let add = fn(x, y) { y + x; }; add(5 + 5, add(5, 5));",
+			expected: 20,
+		},
+	}
+
+	for _, tc := range testCases {
+		evaluated := testEval(tc.input)
+		testIntegerObject(t, evaluated, tc.expected)
+	}
+}
+
 func TestIfElseExpression(t *testing.T) {
 	testCases := []struct {
 		input    string
