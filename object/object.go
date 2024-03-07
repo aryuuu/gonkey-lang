@@ -21,6 +21,7 @@ const (
 	STRING_OBJ       = "STRING"
 	BUILTIN_OBJ      = "BUILTIN"
 	ARRAY_OBJ        = "ARRAY"
+	MAP_OBJ          = "MAP"
 )
 
 type Object interface {
@@ -125,6 +126,38 @@ func (ao *Array) Inspect() string {
 	out.WriteString("]")
 
 	return out.String()
+}
+
+type Map struct {
+	Pairs map[HashKey]HashPair
+}
+
+func (m *Map) Type() ObjectType {
+	return MAP_OBJ
+}
+
+func (m *Map) Inspect() string {
+	var out bytes.Buffer
+
+	pairs := []string{}
+	for _, pair := range m.Pairs {
+		pairs = append(pairs, fmt.Sprintf("%s: %s", pair.Key.Inspect(), pair.Value.Inspect()))
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
+
+	return out.String()
+}
+
+type HashPair struct {
+	Key   Object
+	Value Object
+}
+
+type Hashable interface {
+	HashKey() HashKey
 }
 
 type HashKey struct {
