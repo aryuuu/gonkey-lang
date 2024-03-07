@@ -3,6 +3,7 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"hash/fnv"
 	"strings"
 
 	"github.com/aryuuu/gonkey-lang/ast"
@@ -39,6 +40,13 @@ func (i *Integer) Inspect() string {
 	return fmt.Sprintf("%d", i.Value)
 }
 
+func (i *Integer) HashKey() HashKey {
+	return HashKey{
+		Type:  i.Type(),
+		Value: uint64(i.Value),
+	}
+}
+
 type String struct {
 	Value string
 }
@@ -51,6 +59,16 @@ func (s *String) Inspect() string {
 	return s.Value
 }
 
+func (s *String) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+
+	return HashKey{
+		Type:  s.Type(),
+		Value: h.Sum64(),
+	}
+}
+
 type Boolean struct {
 	Value bool
 }
@@ -61,6 +79,19 @@ func (b *Boolean) Type() ObjectType {
 
 func (b *Boolean) Inspect() string {
 	return fmt.Sprintf("%t", b.Value)
+}
+
+func (b *Boolean) HashKey() HashKey {
+	value := 0
+
+	if b.Value {
+		value = 1
+	}
+
+	return HashKey{
+		Type:  b.Type(),
+		Value: uint64(value),
+	}
 }
 
 type Null struct{}
@@ -94,6 +125,11 @@ func (ao *Array) Inspect() string {
 	out.WriteString("]")
 
 	return out.String()
+}
+
+type HashKey struct {
+	Type  ObjectType
+	Value uint64
 }
 
 type Function struct {
