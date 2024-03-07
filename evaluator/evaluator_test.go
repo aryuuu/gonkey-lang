@@ -87,19 +87,19 @@ func TestLetStatements(t *testing.T) {
 		expected int64
 	}{
 		{
-			input: "let a = 5; a;",
+			input:    "let a = 5; a;",
 			expected: 5,
 		},
 		{
-			input: "let a = 5 * 5; a;",
+			input:    "let a = 5 * 5; a;",
 			expected: 25,
 		},
 		{
-			input: "let a = 5; let b = a; b;",
+			input:    "let a = 5; let b = a; b;",
 			expected: 5,
 		},
 		{
-			input: "let a = 5; let b = a; let c = a + b + 5; c;",
+			input:    "let a = 5; let b = a; let c = a + b + 5; c;",
 			expected: 15,
 		},
 	}
@@ -134,28 +134,28 @@ func TestFunctionObject(t *testing.T) {
 }
 
 func TestFunctionApplication(t *testing.T) {
-	testCases := []struct{
-		input string
+	testCases := []struct {
+		input    string
 		expected int64
 	}{
 		{
-			input: "let identity = fn(x) { x; }; identity(5);",
+			input:    "let identity = fn(x) { x; }; identity(5);",
 			expected: 5,
 		},
 		{
-			input: "let identity = fn(x) { return x; }; identity(5);",
+			input:    "let identity = fn(x) { return x; }; identity(5);",
 			expected: 5,
 		},
 		{
-			input: "let double = fn(x) { 2 * x; }; double(5);",
+			input:    "let double = fn(x) { 2 * x; }; double(5);",
 			expected: 10,
 		},
 		{
-			input: "let add = fn(x, y) { y + x; }; add(5, 5);",
+			input:    "let add = fn(x, y) { y + x; }; add(5, 5);",
 			expected: 10,
 		},
 		{
-			input: "let add = fn(x, y) { y + x; }; add(5 + 5, add(5, 5));",
+			input:    "let add = fn(x, y) { y + x; }; add(5 + 5, add(5, 5));",
 			expected: 20,
 		},
 	}
@@ -177,6 +177,82 @@ func TestStringLiteral(t *testing.T) {
 
 	if str.Value != "hello world" {
 		t.Errorf("String has wrong value. got=%q", str.Value)
+	}
+}
+
+func TestArrayLiterals(t *testing.T) {
+	input := `[1, 2 * 2, 3 + 3];`
+	evaluated := testEval(input)
+
+	arr, ok := evaluated.(*object.Array)
+	if !ok {
+		t.Fatalf("object is not Array, got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if len(arr.Elements) != 3 {
+		t.Fatalf("len(arr.Elements) is not 3, got=%d", len(arr.Elements))
+	}
+
+	testIntegerObject(t, arr.Elements[0], 1)
+	testIntegerObject(t, arr.Elements[1], 4)
+	testIntegerObject(t, arr.Elements[2], 6)
+}
+
+func TestIndexExpressions(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected any
+	}{
+		{
+			"[1, 2, 3][0]",
+			1,
+		},
+		{
+			"[1, 2, 3][1]",
+			2,
+		},
+		{
+			"[1, 2, 3][2]",
+			3,
+		},
+		{
+			"let i = 0; [0][i];",
+			0,
+		},
+		{
+			"[1, 2, 3][1 + 1];",
+			3,
+		},
+		{
+			"let myArray = [1, 2, 3]; myArray[2];",
+			3,
+		},
+		{
+			"let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+			6,
+		},
+		{
+			"let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];",
+			2,
+		},
+		{
+			"[1, 2, 3][3]",
+			nil,
+		},
+		{
+			"[1, 2, 3][-1]",
+			nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		evaluated := testEval(tc.input)
+		integer, ok := tc.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+		}
 	}
 }
 
@@ -411,23 +487,23 @@ func TestBuiltinFunctions(t *testing.T) {
 		expected any
 	}{
 		{
-			input: `len("")`,
+			input:    `len("")`,
 			expected: 0,
 		},
 		{
-			input: `len("four")`,
+			input:    `len("four")`,
 			expected: 4,
 		},
 		{
-			input: `len("hello world")`,
+			input:    `len("hello world")`,
 			expected: 11,
 		},
 		{
-			input: `len(1)`,
+			input:    `len(1)`,
 			expected: "argument to `len` not supported. got INTEGER",
 		},
 		{
-			input: `len("one", "two")`,
+			input:    `len("one", "two")`,
 			expected: "wrong number of arguments. got=2, want=1",
 		},
 	}
