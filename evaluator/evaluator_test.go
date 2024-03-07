@@ -240,6 +240,52 @@ func TestMapLiteral(t *testing.T) {
 
 }
 
+func TestMapIndexExpressions(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected any
+	}{
+		{
+			input:    `{"foo": 5}["foo"]`,
+			expected: 5,
+		},
+		{
+			input:    `{"foo": 5}["bar"]`,
+			expected: nil,
+		},
+		{
+			input:    `let key = "foo"; {"foo": 5}[key]`,
+			expected: 5,
+		},
+		{
+			input:    `{}["foo"]`,
+			expected: nil,
+		},
+		{
+			input:    `{5: 5}[5]`,
+			expected: 5,
+		},
+		{
+			input:    `{true: 5}[true]`,
+			expected: 5,
+		},
+		{
+			input:    `{false: 5}[false]`,
+			expected: 5,
+		},
+	}
+
+	for _, tc := range testCases {
+		evaluated := testEval(tc.input)
+		integer, ok := tc.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+		}
+	}
+}
+
 func TestIndexExpressions(t *testing.T) {
 	testCases := []struct {
 		input    string
@@ -626,6 +672,10 @@ func TestErrorHandling(t *testing.T) {
 			return 1;
 			`,
 			expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			input: `{"name": "Monkey"}[fn(x) { x }]`,
+			expectedMessage: "unusable as hash key: FUNCTION",
 		},
 	}
 
