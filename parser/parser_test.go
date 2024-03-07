@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aryuuu/gonkey-lang/ast"
@@ -200,6 +199,37 @@ func TestStringLiteralExpression(t *testing.T) {
 	}
 }
 
+func TestParsingArrayLiterals(t *testing.T) {
+	input := `[1, 2 * 2, 3 + 3]`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParseErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program has the wrong number of statements, got=%d instead of %d", len(program.Statements), 1)
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement, got=%T", program.Statements[0])
+	}
+
+	arrayLit, ok := stmt.Expression.(*ast.ArrayLiteral)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.ArrayLiteral, got=%T", stmt)
+	}
+
+	if len(arrayLit.Elements) != 3 {
+		t.Fatalf("len(arrayLit.Elements) is not 3, got=%T", len(arrayLit.Elements))
+	}
+
+	testIntegerLiteral(t, arrayLit.Elements[0], 1)
+	testInfixExpression(t, arrayLit.Elements[1], 2, "*", 2)
+	testInfixExpression(t, arrayLit.Elements[2], 3, "+", 3)
+}
+
 func TestParsingPrefixExpressions(t *testing.T) {
 	prefixTests := []struct {
 		input    string
@@ -266,7 +296,6 @@ func TestParsingInfixExpressions(t *testing.T) {
 		checkParseErrors(t, p)
 
 		if len(program.Statements) != 1 {
-			log.Printf("%q", program.Statements)
 			t.Fatalf("[%d] program has the wrong number of statements, got=%d instead of %d", idx, len(program.Statements), 1)
 		}
 
@@ -509,9 +538,6 @@ func TestFunctionLiteralParsing(t *testing.T) {
 	checkParseErrors(t, p)
 
 	if len(program.Statements) != 1 {
-		for _, st := range program.Statements {
-			log.Println(st.TokenLiteral())
-		}
 		t.Fatalf("program.Statements does not contain %d statements, got=%d\n", 1, len(program.Statements))
 	}
 
