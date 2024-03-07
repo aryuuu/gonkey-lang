@@ -230,6 +230,32 @@ func TestParsingArrayLiterals(t *testing.T) {
 	testInfixExpression(t, arrayLit.Elements[2], 3, "+", 3)
 }
 
+func TestParsingIndexExpression(t *testing.T) {
+	input := `myArray[1 + 1]`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParseErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program has the wrong number of statements, got=%d instead of %d", len(program.Statements), 1)
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement, got=%T", program.Statements[0])
+	}
+
+	indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.IndexExpression, got=%T", stmt)
+	}
+
+	testIdentifier(t, indexExp.Left, "myArray")
+	testInfixExpression(t, indexExp.Index, 1, "+", 1)
+}
+
 func TestParsingPrefixExpressions(t *testing.T) {
 	prefixTests := []struct {
 		input    string
@@ -409,6 +435,14 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{
 			"add(a + b + c * d / f + g)",
 			"add((((a + b) + ((c * d) / f)) + g))",
+		},
+		{
+			"a * [1, 2, 3, 4][b * c] * d",
+			"((a * ([1, 2, 3, 4][(b * c)])) * d)",
+		},
+		{
+			"add(a * b[2], b[1], 2 * [1, 2][1])",
+			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
 		},
 	}
 
