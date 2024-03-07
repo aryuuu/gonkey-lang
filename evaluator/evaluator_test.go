@@ -503,6 +503,18 @@ func TestBuiltinFunctions(t *testing.T) {
 			expected: "argument to `len` not supported. got INTEGER",
 		},
 		{
+			input:    `len(["fatt"])`,
+			expected: 1,
+		},
+		{
+			input:    `len(["fatt", "lisa"])`,
+			expected: 2,
+		},
+		{
+			input:    `len(["fatt", "lisa", 1])`,
+			expected: 3,
+		},
+		{
 			input:    `len("one", "two")`,
 			expected: "wrong number of arguments. got=2, want=1",
 		},
