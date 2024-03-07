@@ -9,5 +9,5 @@ go run main.go
 ## Running test
 
 ```console
-
+go test ./...
 ```
